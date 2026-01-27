@@ -62,13 +62,35 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
     // Contact Logic
     const showContact = item.contact_via_call || item.contact_via_text || item.contact_via_email
 
+    // Category Styles
+    const getCategoryStyles = (cat: string) => {
+        if (cat === 'Services') return {
+            border: 'border-l-4 border-l-island-gold-500',
+            expandedRing: 'ring-island-gold-500/50',
+            hover: 'hover:border-island-gold-500/30'
+        }
+        if (cat === 'Help Wanted') return {
+            border: 'border-l-4 border-l-island-rust-500',
+            expandedRing: 'ring-island-rust-500/50',
+            hover: 'hover:border-island-rust-500/30'
+        }
+        return {
+            border: 'border-l-4 border-l-transparent',
+            expandedRing: 'ring-stone-700',
+            hover: 'hover:border-stone-600'
+        }
+    }
+
+    const styles = getCategoryStyles(item.category)
+
     return (
         <div
             onClick={() => setIsExpanded(!isExpanded)}
             className={`
-                group relative flex flex-col rounded-lg border border-stone-800 bg-stone-900 shadow-sm transition-all cursor-pointer
-                hover:border-stone-600 hover:shadow-md
-                ${isExpanded ? 'p-6 ring-1 ring-stone-700' : 'p-4'}
+                group relative flex flex-col rounded-lg border border-stone-800/60 bg-stone-900 shadow-sm transition-all cursor-pointer
+                ${styles.hover} hover:shadow-md
+                ${isExpanded ? `p-6 ring-1 ${styles.expandedRing}` : 'p-4'}
+                ${styles.border}
             `}
         >
             <div className="flex justify-between items-start gap-4">

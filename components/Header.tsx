@@ -10,12 +10,12 @@ export default async function Header() {
     return (
         <header className="sticky top-0 z-50 w-full border-b border-stone-800 bg-stone-950/80 backdrop-blur-md">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-stone-50 text-stone-950 flex items-center justify-center font-serif font-bold text-xl rounded-md">
-                        G
-                    </div>
-                    <span className="font-serif text-xl font-bold tracking-tight text-stone-100">
-                        guemes.services
+                <Link href="/" className="flex items-baseline gap-1 group">
+                    <span className="font-serif text-2xl font-bold tracking-tight text-stone-100 group-hover:text-white transition-colors">
+                        Guemes
+                    </span>
+                    <span className="font-sans text-sm font-medium tracking-[0.2em] text-stone-400 uppercase group-hover:text-stone-300 transition-colors">
+                        Services
                     </span>
                 </Link>
                 <div className="flex items-center gap-4">
