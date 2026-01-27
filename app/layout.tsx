@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "Guemes Community Board",
-  description: "A space for buying, selling, and connecting.",
+  title: "Guemes Services",
+  description: "A space for islanders to find help or offer their services.",
 };
 
 export default function RootLayout({

@@ -1,23 +1,9 @@
 
 import { createClient } from '@/utils/supabase/server'
-import ListingActions from './ListingActions'
+// Basic time helper removed as it's now in ListingCard
 
-// Basic time helper since I didn't install date-fns yet
-function timeAgo(date: string) {
-    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    // ... same as before
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + "y";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + "mo";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + "d";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + "h";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + "m";
-    return Math.floor(seconds) + "s";
-}
+
+import ListingCard from './ListingCard'
 
 export default async function Feed() {
     const supabase = await createClient()
@@ -30,7 +16,8 @@ export default async function Feed() {
         .order('created_at', { ascending: false })
 
     // Group by category
-    const categories = ['For Sale', 'Free', 'Wanted', 'Events', 'Services', 'Chat']
+    const categories = ['Services', 'Help Wanted', 'For Sale', 'Free', 'Wanted', 'Events', 'Chat']
+    const mainCategories = ['Services', 'Help Wanted']
     const groupedListings: Record<string, any[]> = {}
 
     categories.forEach(cat => groupedListings[cat] = [])
@@ -47,53 +34,56 @@ export default async function Feed() {
     }
 
     return (
-        <div className="space-y-8">
-            {categories.map(category => {
+        <div className="space-y-12">
+            {/* Main Categories (Services & Help Wanted) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {mainCategories.map(category => {
+                    const items = groupedListings[category] || []
+                    return (
+                        <section key={category} className="space-y-4">
+                            <div className="flex items-center justify-between border-b-2 border-stone-800 pb-2">
+                                <h3 className="text-2xl font-serif font-bold text-stone-100">
+                                    {category}
+                                </h3>
+                                <span className="text-sm font-medium text-stone-500 bg-stone-900 px-2 py-1 rounded-full border border-stone-800">
+                                    {items.length} Posts
+                                </span>
+                            </div>
+
+                            <div className="space-y-3">
+                                {items.length > 0 ? (
+                                    items.map((item) => (
+                                        <ListingCard key={item.id} item={item} currentUserId={currentUserId} />
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 border border-dashed border-stone-800 rounded-lg text-stone-600 italic">
+                                        No listings yet.
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    )
+                })}
+            </div>
+
+            {/* Legacy/Other Categories (collapsed at bottom or separate section) */}
+            {categories.filter(c => !mainCategories.includes(c)).map(category => {
                 const items = groupedListings[category]
                 if (!items || items.length === 0) return null
 
                 return (
-                    <section key={category} className="space-y-4">
-                        <h3 className="text-xl font-serif font-bold text-stone-200 border-b-2 border-stone-800 pb-1">
-                            {category}
+                    <section key={category} className="space-y-4 opacity-80">
+                        <h3 className="text-xl font-serif font-bold text-stone-400 border-b border-stone-800 pb-1">
+                            {category} (Archive)
                         </h3>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {items.map((item) => (
-                                <div key={item.id} className="group relative flex flex-col justify-between rounded-lg border border-stone-800 bg-stone-900 p-4 shadow-sm transition-shadow hover:shadow-md hover:border-stone-700">
-                                    <div>
-                                        <div className="flex justify-between items-start">
-                                            <h4 className="font-bold text-stone-100 text-lg leading-tight">
-                                                {item.title}
-                                            </h4>
-                                            <span className="text-xs text-stone-500 shrink-0 ml-2">
-                                                {timeAgo(item.created_at)}
-                                            </span>
-                                        </div>
-                                        <p className="mt-2 text-sm text-stone-400 line-clamp-3 whitespace-pre-line">
-                                            {item.content}
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 flex items-center justify-between text-xs text-stone-500">
-                                        <span className="font-medium text-stone-500">
-                                            {item.profiles?.full_name || 'Anonymous'}
-                                        </span>
-                                        <ListingActions
-                                            listingId={item.id}
-                                            isOwner={currentUserId === item.user_id}
-                                        />
-                                    </div>
-                                </div>
+                                <ListingCard key={item.id} item={item} currentUserId={currentUserId} />
                             ))}
                         </div>
                     </section>
                 )
             })}
-
-            {(!listings || listings.length === 0) && (
-                <div className="text-center py-12 text-stone-500">
-                    <p>No listings yet. Be the first to post!</p>
-                </div>
-            )}
         </div>
     )
 }

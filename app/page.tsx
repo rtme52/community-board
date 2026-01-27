@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-serif font-bold text-stone-100">Community Listings</h1>
+        <h1 className="text-3xl font-serif font-bold text-stone-100">Listings (Currently In Development)</h1>
         {user ? (
           <Link href="/create">
             <Button className="bg-stone-900 text-white hover:bg-stone-800">
