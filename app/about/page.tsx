@@ -6,7 +6,7 @@ export default function AboutPage() {
             <div className="space-y-6 text-stone-300 leading-relaxed">
                 <p className="text-lg">
                     Guemes Services is a community-driven initiative designed to connect islanders.
-                    Whether you need a hand with a project, have a skill to share, or just help someone move some firewood,
+                    Whether you need a hand with a project, have a skill to share, or just want to help someone move some firewood,
                     this board is here to facilitate those connections.
                 </p>
 
