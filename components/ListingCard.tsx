@@ -111,6 +111,19 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                             </span>
                             <span>•</span>
                             <span>{timeAgo(item.created_at)}</span>
+                            
+                            {showContact && (
+                                <>
+                                    <span>•</span>
+                                    <div className="flex items-center gap-1.5 bg-stone-800/80 px-2 py-0.5 rounded-full border border-stone-700/50 text-stone-300">
+                                        <div className="flex -space-x-1">
+                                            {(item.contact_via_call || item.contact_via_text) && <Phone size={10} />}
+                                            {item.contact_via_email && <Mail size={10} />}
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Contact</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
