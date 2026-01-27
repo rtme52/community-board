@@ -32,6 +32,11 @@ export async function signup(formData: FormData) {
     const password = formData.get('password') as string
     const fullName = formData.get('fullName') as string
 
+    // Determine the redirect URL based on environment
+    const siteUrl = process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : 'https://guemes.services'
+
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -39,44 +44,29 @@ export async function signup(formData: FormData) {
             data: {
                 full_name: fullName,
             },
-            // Determine the redirect URL based on environment
-            // In production, we want https://guemes.services
-            // In dev, we want http://localhost:3000
-            const siteUrl = process.env.NODE_ENV === 'development'
-                ? 'http://localhost:3000'
-                : 'https://guemes.services'
+            emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
+    })
 
-    const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            full_name: fullName,
-                        },
-                        emailRedirectTo: `${siteUrl}/auth/callback`,
-                    },
-                })
-
-    if(error) {
-                return { error: error.message }
-            }
-
-    // If auto-confirm is enabled (local dev usually), user is logged in.
-    if(data.user && data.session) {
-            const { error: profileError } = await supabase.from('profiles').insert({
-                id: data.user.id,
-                full_name: fullName,
-            })
-        
-        if (profileError) {
-        console.error('Error creating profile:', profileError)
+    if (error) {
+        return { error: error.message }
     }
 
-    revalidatePath('/', 'layout')
-    redirect('/')
-} else {
-    // If no session, it means email confirmation is required.
-    // Return a success flag to the UI does NOT redirect.
-    return { success: true }
-}
+    // If auto-confirm is enabled (local dev usually), user is logged in.
+    if (data.user && data.session) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+            id: data.user.id,
+            full_name: fullName,
+        })
+
+        if (profileError) {
+            console.error('Error creating profile:', profileError)
+        }
+
+        revalidatePath('/', 'layout')
+        redirect('/')
+    } else {
+        // If no session, it means email confirmation is required.
+        return { success: true }
+    }
 }

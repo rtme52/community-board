@@ -32,7 +32,7 @@ export default function AuthForm() {
         }
 
         const action = isLogin ? login : signup
-        const result = await action(formData)
+        const result = await action(formData) as any
 
         if (result?.error) {
             setError(result.error)
