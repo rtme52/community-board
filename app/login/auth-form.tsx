@@ -8,6 +8,7 @@ export default function AuthForm() {
     const [isLogin, setIsLogin] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
     async function handleSubmit(formData: FormData) {
         setLoading(true)
@@ -36,8 +37,35 @@ export default function AuthForm() {
         if (result?.error) {
             setError(result.error)
             setLoading(false)
+        } else if (result?.success) {
+            // Handle success state (verification needed)
+            setSuccessMessage("Please check your email to verify your account.")
+            setLoading(false)
         }
-        // If successful, the action will redirect, so we don't need to setLoading(false)
+    }
+
+    if (successMessage) {
+        return (
+            <div className="w-full max-w-md space-y-8 rounded-lg border border-stone-800 bg-stone-900 p-8 shadow-sm text-center">
+                <h2 className="text-2xl font-serif font-bold text-stone-100">Check your email</h2>
+                <p className="mt-4 text-stone-400">
+                    {successMessage}
+                </p>
+                <p className="mt-2 text-sm text-stone-500">
+                    Click the link in the email to activate your account.
+                </p>
+                <Button
+                    variant="outline"
+                    className="mt-6 w-full border-stone-700 text-stone-300 hover:text-stone-100 hover:bg-stone-800"
+                    onClick={() => {
+                        setSuccessMessage(null)
+                        setIsLogin(true)
+                    }}
+                >
+                    Back to Sign In
+                </Button>
+            </div>
+        )
     }
 
     return (

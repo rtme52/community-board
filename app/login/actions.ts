@@ -39,29 +39,44 @@ export async function signup(formData: FormData) {
             data: {
                 full_name: fullName,
             },
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/auth/callback`,
-        },
-    })
+            // Determine the redirect URL based on environment
+            // In production, we want https://guemes.services
+            // In dev, we want http://localhost:3000
+            const siteUrl = process.env.NODE_ENV === 'development'
+                ? 'http://localhost:3000'
+                : 'https://guemes.services'
 
-    if (error) {
-        return { error: error.message }
-    }
+    const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                        },
+                        emailRedirectTo: `${siteUrl}/auth/callback`,
+                    },
+                })
+
+    if(error) {
+                return { error: error.message }
+            }
 
     // If auto-confirm is enabled (local dev usually), user is logged in.
-    // We can try to insert the profile now.
-    if (data.user && data.session) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            full_name: fullName,
-        })
-
-        // If profile creation fails, we might want to log it or handle it. 
-        // But since we use metadata as backup, it's okay.
+    if(data.user && data.session) {
+            const { error: profileError } = await supabase.from('profiles').insert({
+                id: data.user.id,
+                full_name: fullName,
+            })
+        
         if (profileError) {
-            console.error('Error creating profile:', profileError)
-        }
+        console.error('Error creating profile:', profileError)
     }
 
     revalidatePath('/', 'layout')
     redirect('/')
+} else {
+    // If no session, it means email confirmation is required.
+    // Return a success flag to the UI does NOT redirect.
+    return { success: true }
+}
 }
