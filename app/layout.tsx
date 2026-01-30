@@ -19,14 +19,12 @@ export const metadata: Metadata = {
     siteName: 'Guemes Services',
     locale: 'en_US',
     type: 'website',
-    images: [
-      {
-        url: '/opengraph-image', // Explicitly point to the generated image
-        width: 1200,
-        height: 630,
-        alt: 'Guemes Services - Community Board',
-      },
-    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Guemes Services',
+    description: 'Connect with your neighbors. Find help, offer services, and support the local community.',
+    creator: '@guemesservices', // Optional, if you have a handle
   },
 };
 
