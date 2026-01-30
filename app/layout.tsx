@@ -11,7 +11,7 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 export const metadata: Metadata = {
   metadataBase: new URL('https://guemes.services'), // Required for OG images to work properly
   title: "Guemes Services",
-  description: "A space for islanders to find help or offer their services.",
+  description: "Connect with your neighbors. Find help, offer services, and support the local community.",
   openGraph: {
     title: "Guemes Services",
     description: "Connect with your neighbors. Find help, offer services, and support the local community.",
