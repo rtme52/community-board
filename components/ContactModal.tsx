@@ -6,7 +6,7 @@ import { X, Loader2, Send } from 'lucide-react'
 import { Button, Input, Textarea, Label } from './ui'
 import { sendSupportEmail } from '@/app/actions'
 
-export default function ContactModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export default function ContactModal({ isOpen, onClose, user }: { isOpen: boolean, onClose: () => void, user?: any }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
 
@@ -51,12 +51,25 @@ export default function ContactModal({ isOpen, onClose }: { isOpen: boolean, onC
                         <form action={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Name</Label>
-                                <Input id="name" name="name" placeholder="Your name" required />
+                                <Input
+                                    id="name"
+                                    name="name"
+                                    placeholder="Your name"
+                                    defaultValue={user?.user_metadata?.full_name || ''}
+                                    required
+                                />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                                <Input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    defaultValue={user?.email || ''}
+                                    required
+                                />
                             </div>
 
                             <div className="space-y-2">

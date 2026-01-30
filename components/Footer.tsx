@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import ContactModal from './ContactModal'
 
-export default function Footer() {
+export default function Footer({ user }: { user: any }) {
     const [isContactOpen, setIsContactOpen] = useState(false)
 
     return (
@@ -29,7 +29,7 @@ export default function Footer() {
                 </div>
             </footer>
 
-            <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+            <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} user={user} />
         </>
     )
 }

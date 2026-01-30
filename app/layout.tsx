@@ -19,14 +19,27 @@ export const metadata: Metadata = {
     siteName: 'Guemes Services',
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: '/opengraph-image', // Explicitly point to the generated image
+        width: 1200,
+        height: 630,
+        alt: 'Guemes Services - Community Board',
+      },
+    ],
   },
 };
 
-export default function RootLayout({
+import { createClient } from '@/utils/supabase/server'
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} min-h-screen font-sans flex flex-col`}>
@@ -34,7 +47,7 @@ export default function RootLayout({
         <main className="flex-grow">
           {children}
         </main>
-        <Footer />
+        <Footer user={user} />
       </body>
     </html>
   );

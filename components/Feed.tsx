@@ -14,6 +14,7 @@ export default async function Feed() {
     const { data: listings } = await supabase
         .from('listings')
         .select('*, profiles(full_name)')
+        .eq('is_hidden', false)
         .order('created_at', { ascending: false })
 
     // Group by category
@@ -58,6 +59,24 @@ export default async function Feed() {
         return 'bg-stone-900 border-stone-800 text-stone-400'
     }
 
+    const getCategoryBadge = (category: string) => {
+        if (category === 'Services') {
+            return (
+                <span className="ml-3 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-island-gold-400 bg-island-gold-950/50 border border-island-gold-900/50 rounded-full">
+                    Offering
+                </span>
+            )
+        }
+        if (category === 'Help Wanted') {
+            return (
+                <span className="ml-3 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-island-rust-400 bg-island-rust-950/50 border border-island-rust-900/50 rounded-full">
+                    Hiring
+                </span>
+            )
+        }
+        return null
+    }
+
     return (
         <div className="space-y-12">
             {/* Main Categories (Services & Help Wanted) */}
@@ -67,13 +86,14 @@ export default async function Feed() {
                     return (
                         <section key={category} className={`space-y-4 ${getSectionStyle(category)}`}>
                             <div className="flex items-center justify-between border-b border-stone-800/20 pb-4 mb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg border ${getIconContainerStyle(category)}`}>
+                                <div className="flex items-center">
+                                    <div className={`p-2 rounded-lg border mr-3 ${getIconContainerStyle(category)}`}>
                                         {getCategoryIcon(category)}
                                     </div>
                                     <h3 className="text-2xl font-serif font-bold text-stone-100">
                                         {category}
                                     </h3>
+                                    {getCategoryBadge(category)}
                                 </div>
                                 <span className="text-sm font-medium text-stone-500 bg-stone-900 px-2 py-1 rounded-full border border-stone-800">
                                     {items.length} Posts

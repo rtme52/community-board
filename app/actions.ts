@@ -1,17 +1,34 @@
 'use server'
 
+import { createClient } from '@/utils/supabase/server'
+
 export async function sendSupportEmail(formData: FormData) {
-    const name = formData.get('name')
-    const email = formData.get('email')
-    const message = formData.get('message')
+    const supabase = await createClient()
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
+    const message = formData.get('message') as string
 
-    console.log('--- SUPPORT EMAIL RECEIVED ---')
-    console.log(`From: ${name} (${email})`)
-    console.log(`Message: ${message}`)
-    console.log('------------------------------')
+    if (!name || !email || !message) {
+        return { error: 'All fields are required' }
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    const user_id = user?.id
+
+    const { error } = await supabase
+        .from('support_tickets')
+        .insert({
+            name,
+            email,
+            message,
+            user_id
+        })
+
+    if (error) {
+        console.error('Error submitting ticket:', error)
+        return { error: 'Failed to submit ticket' }
+    }
 
     return { success: true }
 }
