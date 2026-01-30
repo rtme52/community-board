@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui'
 import Link from 'next/link'
-import { Trash2, Edit, ChevronDown, ChevronUp, Phone, Mail, MessageSquare, ImageIcon, User as UserIcon, Calendar, Contact } from 'lucide-react'
-import { deleteListing } from '@/app/listings/actions'
+
+import { Trash2, Edit, ChevronDown, ChevronUp, Phone, Mail, MessageSquare, ImageIcon, User as UserIcon, Calendar, Contact, Eye, EyeOff } from 'lucide-react'
+import ProtectedContactInfo from './ProtectedContactInfo'
+
+import { deleteListing, toggleListingVisibility } from '@/app/listings/actions'
 import { useTransition } from 'react'
 
 function ListingActions({ listingId, isOwner }: { listingId: number, isOwner: boolean }) {
@@ -56,8 +59,9 @@ function timeAgo(date: string) {
     return Math.floor(seconds) + "s";
 }
 
-export default function ListingCard({ item, currentUserId }: { item: any, currentUserId?: string }) {
+export default function ListingCard({ item, currentUserId, manageMode = false }: { item: any, currentUserId?: string, manageMode?: boolean }) {
     const [isExpanded, setIsExpanded] = useState(false)
+    const [isPending, startTransition] = useTransition()
 
     // Contact Logic
     const showContact = item.contact_via_call || item.contact_via_text || item.contact_via_email
@@ -85,7 +89,7 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
             expandedRing: 'ring-1 ring-stone-700',
             hover: 'hover:border-stone-600',
             expandedBg: 'bg-stone-900',
-            iconColor: 'text-stone-500',
+            iconColor: 'text-stone-400',
             contactBg: 'bg-stone-800/50 border-stone-700/50'
         }
     }
@@ -100,6 +104,7 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                 ${styles.hover} hover:shadow-lg
                 ${isExpanded ? `${styles.expandedBg} ${styles.expandedRing} shadow-md` : 'bg-stone-900 p-4'}
                 ${!isExpanded && styles.border}
+                ${manageMode && (item.is_hidden || item.is_admin_hidden) ? 'opacity-75 border-stone-800 border-dashed bg-stone-950/50' : ''}
             `}
         >
             {/* Collapsed Header */}
@@ -115,12 +120,12 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                             {item.title}
                         </h4>
                         {!isExpanded && item.image_url && (
-                            <ImageIcon size={16} className="text-stone-500" />
+                            <ImageIcon size={16} className="text-stone-400" />
                         )}
                     </div>
 
                     {!isExpanded && (
-                        <div className="flex items-center gap-2 text-xs text-stone-500 mt-2">
+                        <div className="flex items-center gap-2 text-xs text-stone-400 mt-2">
                             <div className="flex items-center gap-1.5">
                                 <span className={`w-1.5 h-1.5 rounded-full ${item.profiles?.full_name ? 'bg-stone-600' : 'bg-stone-800'}`}></span>
                                 <span className="font-medium text-stone-400">
@@ -139,10 +144,56 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                             <img src={item.image_url} alt="" className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                         </div>
                     )}
-                    <div className={`text-stone-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                    <div className={`text-stone-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                         <ChevronDown size={20} />
                     </div>
                 </div>
+
+                {/* Management Actions (Visible in manageMode without expansion) */}
+                {manageMode && currentUserId === item.user_id && (
+                    <div className="flex items-center gap-2 pr-4 pl-2" onClick={(e) => e.stopPropagation()}>
+                        {item.is_admin_hidden ? (
+                            <span className="text-[10px] font-bold text-red-500 bg-red-950/30 px-2 py-1 rounded border border-red-900/50 uppercase tracking-wider mr-2 cursor-help" title="This listing has been hidden by an administrator. Please contact support.">
+                                Removed by Admin
+                            </span>
+                        ) : (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-8 w-8 p-0 ${item.is_hidden ? 'text-stone-400 hover:text-stone-300' : 'text-stone-400 hover:text-stone-100'}`}
+                                title={item.is_hidden ? "Unhide Listing" : "Hide Listing"}
+                                disabled={isPending}
+                                onClick={() => startTransition(async () => {
+                                    await toggleListingVisibility(item.id, !item.is_hidden)
+                                })}
+                            >
+                                {item.is_hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </Button>
+                        )}
+
+                        <Link href={`/edit/${item.id}`}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-stone-400 hover:text-stone-100" title="Edit Listing">
+                                <Edit size={16} />
+                            </Button>
+                        </Link>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-stone-400 hover:text-red-400"
+                            title="Delete Listing"
+                            disabled={isPending}
+                            onClick={() => {
+                                if (confirm('Are you sure you want to delete this listing?')) {
+                                    startTransition(async () => {
+                                        await deleteListing(item.id)
+                                    })
+                                }
+                            }}
+                        >
+                            <Trash2 size={16} />
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Expanded Content */}
@@ -150,7 +201,7 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                 <div className="px-6 pb-6 animate-in fade-in slide-in-from-top-1 duration-300">
 
                     {/* Metadata Row */}
-                    <div className="flex items-center gap-4 text-xs text-stone-500 mb-6 mt-1 border-b border-stone-800/50 pb-4">
+                    <div className="flex items-center gap-4 text-xs text-stone-400 mb-6 mt-1 border-b border-stone-800/50 pb-4">
                         <div className="flex items-center gap-2">
                             <div className={`p-1.5 rounded-full ${styles.contactBg}`}>
                                 <UserIcon size={12} className={styles.iconColor} />
@@ -181,35 +232,39 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
                                 <Contact size={14} />
                                 Contact Information
                             </h5>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {(item.contact_via_call || item.contact_via_text) && item.contact_phone && (
-                                    <div className="flex items-center gap-3 bg-stone-950/30 p-3 rounded-lg border border-stone-800/30">
-                                        <div className={`p-2.5 rounded-full bg-stone-900 border border-stone-800 ${styles.iconColor}`}>
-                                            {item.contact_via_call && !item.contact_via_text ? <Phone size={18} /> :
-                                                !item.contact_via_call && item.contact_via_text ? <MessageSquare size={18} /> :
-                                                    <div className="flex -space-x-1"><Phone size={14} /><MessageSquare size={14} /></div>}
-                                        </div>
-                                        <div>
-                                            <p className="text-stone-100 font-mono text-base font-medium select-all hover:text-white transition-colors cursor-text">{item.contact_phone}</p>
-                                            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mt-0.5">
-                                                {item.contact_via_call && item.contact_via_text ? 'Call or Text' : item.contact_via_call ? 'Call Only' : 'Text Only'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
 
-                                {item.contact_via_email && item.contact_email && (
-                                    <div className="flex items-center gap-3 bg-stone-950/30 p-3 rounded-lg border border-stone-800/30">
-                                        <div className={`p-2.5 rounded-full bg-stone-900 border border-stone-800 ${styles.iconColor}`}>
-                                            <Mail size={18} />
+                            <ProtectedContactInfo>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {(item.contact_via_call || item.contact_via_text) && item.contact_phone && (
+                                        <div className="flex items-center gap-3 bg-stone-950/30 p-3 rounded-lg border border-stone-800/30">
+                                            <div className={`p-2.5 rounded-full bg-stone-900 border border-stone-800 ${styles.iconColor}`}>
+                                                {item.contact_via_call && !item.contact_via_text ? <Phone size={18} /> :
+                                                    !item.contact_via_call && item.contact_via_text ? <MessageSquare size={18} /> :
+                                                        <div className="flex -space-x-1"><Phone size={14} /><MessageSquare size={14} /></div>}
+                                            </div>
+                                            <div>
+                                                <p className="text-stone-100 font-mono text-base font-medium select-all hover:text-white transition-colors cursor-text">{item.contact_phone}</p>
+                                                <p className="text-[10px] text-stone-400 uppercase font-bold tracking-wider mt-0.5">
+                                                    {item.contact_via_call && item.contact_via_text ? 'Call or Text' : item.contact_via_call ? 'Call Only' : 'Text Only'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-stone-100 font-mono text-sm font-medium select-all truncate hover:text-white transition-colors cursor-text" title={item.contact_email}>{item.contact_email}</p>
-                                            <p className="text-[10px] text-stone-500 uppercase font-bold tracking-wider mt-0.5">Email</p>
+                                    )}
+
+                                    {item.contact_via_email && item.contact_email && (
+                                        <div className="flex items-center gap-3 bg-stone-950/30 p-3 rounded-lg border border-stone-800/30">
+                                            <div className={`p-2.5 rounded-full bg-stone-900 border border-stone-800 ${styles.iconColor}`}>
+                                                <Mail size={18} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-stone-100 font-mono text-sm font-medium select-all truncate hover:text-white transition-colors cursor-text" title={item.contact_email}>{item.contact_email}</p>
+                                                <p className="text-[10px] text-stone-400 uppercase font-bold tracking-wider mt-0.5">Email</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            </ProtectedContactInfo>
+
                         </div>
                     )}
 
@@ -227,7 +282,7 @@ export default function ListingCard({ item, currentUserId }: { item: any, curren
 
                     {!currentUserId && (
                         <div className="mt-6 pt-4 border-t border-stone-800 text-center">
-                            <p className="text-xs text-stone-500">
+                            <p className="text-xs text-stone-400">
                                 Own this listing? <Link href="/login" className="text-island-gold-500 hover:text-island-gold-400 hover:underline">Sign in</Link> to edit or delete.
                             </p>
                         </div>

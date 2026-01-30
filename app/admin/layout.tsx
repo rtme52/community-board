@@ -2,9 +2,6 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-import { ADMIN_EMAILS } from './admin-config'
-
-
 export default async function AdminLayout({
     children,
 }: {
@@ -13,7 +10,17 @@ export default async function AdminLayout({
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user || !user.email || !ADMIN_EMAILS.includes(user.email)) {
+    if (!user) {
+        redirect('/login')
+    }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_admin) {
         redirect('/')
     }
 

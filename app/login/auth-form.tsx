@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { login, signup } from './actions'
 import { Button, Input, Label } from '@/components/ui'
+import Link from 'next/link'
 
 export default function AuthForm() {
     const [isLogin, setIsLogin] = useState(true)
@@ -110,7 +111,14 @@ export default function AuthForm() {
                     </div>
 
                     <div>
-                        <Label htmlFor="password">Password</Label>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="password">Password</Label>
+                            {isLogin && (
+                                <Link href="/forgot-password" className="text-xs text-stone-400 hover:text-stone-200">
+                                    Forgot password?
+                                </Link>
+                            )}
+                        </div>
                         <Input
                             id="password"
                             name="password"

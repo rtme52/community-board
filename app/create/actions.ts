@@ -12,6 +12,28 @@ export async function createListing(formData: FormData) {
         return { error: 'You must be logged in to create a listing' }
     }
 
+    // Check Ban Status
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_banned, banned_until')
+        .eq('id', user.id)
+        .single()
+
+    if (profile?.is_banned) {
+        if (profile.banned_until) {
+            const until = new Date(profile.banned_until)
+            if (until > new Date()) {
+                return { error: `Your account is suspended until ${until.toLocaleDateString()} ${until.toLocaleTimeString()}` }
+            } else {
+                // Ban expired, ideally unban user here or just allow access?
+                // For cleanliness, we should probably unban them or just allow.
+                // Let's just allow for now, checking expiry is enough.
+            }
+        } else {
+            return { error: 'Your account has been permanently suspended.' }
+        }
+    }
+
     const title = formData.get('title') as string
     const category = formData.get('category') as string
     const content = formData.get('content') as string

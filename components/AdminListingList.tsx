@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toggleListingVisibility, deleteListingAdmin } from '@/app/admin/actions'
+import { toggleAdminVisibility, deleteListingAdmin } from '@/app/admin/actions'
 import { Button } from '@/components/ui'
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
 import Link from 'next/link'
@@ -12,9 +12,10 @@ export default function AdminListingList({ initialListings }: { initialListings:
 
     const handleToggleVisibility = async (id: number, currentHiddenStatus: boolean) => {
         setLoadingId(id)
-        const result = await toggleListingVisibility(id, currentHiddenStatus)
+        // Admin toggles is_admin_hidden, not the user's is_hidden
+        const result = await toggleAdminVisibility(id, currentHiddenStatus)
         if (result.success) {
-            setListings(listings.map(l => l.id === id ? { ...l, is_hidden: !currentHiddenStatus } : l))
+            setListings(listings.map(l => l.id === id ? { ...l, is_admin_hidden: !currentHiddenStatus } : l))
         } else {
             alert('Failed to update listing visibility')
         }
@@ -57,13 +58,13 @@ export default function AdminListingList({ initialListings }: { initialListings:
                                     {listing.profiles?.full_name || 'Unknown'}
                                 </div>
                                 <div className="text-xs text-stone-500">
-                                    {/* Email not available in profiles table currently */}
+                                    {listing.is_hidden ? '(User Hidden)' : ''}
                                 </div>
                             </td>
                             <td className="p-4">
-                                {listing.is_hidden ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-stone-800 text-stone-400 text-xs">
-                                        <EyeOff size={12} /> Hidden
+                                {listing.is_admin_hidden ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-900/20 text-red-500 text-xs text-nowrap">
+                                        <EyeOff size={12} /> Admin Hidden
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/20 text-green-500 text-xs text-nowrap">
@@ -75,11 +76,11 @@ export default function AdminListingList({ initialListings }: { initialListings:
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className={`${listing.is_hidden ? 'text-green-500 hover:text-green-400' : 'text-stone-400 hover:text-stone-200'}`}
-                                    onClick={() => handleToggleVisibility(listing.id, listing.is_hidden)}
+                                    className={`${listing.is_admin_hidden ? 'text-green-500 hover:text-green-400' : 'text-stone-400 hover:text-stone-200'}`}
+                                    onClick={() => handleToggleVisibility(listing.id, listing.is_admin_hidden)}
                                     disabled={loadingId === listing.id}
                                 >
-                                    {listing.is_hidden ? (
+                                    {listing.is_admin_hidden ? (
                                         <><Eye size={14} className="mr-1" /> Show</>
                                     ) : (
                                         <><EyeOff size={14} className="mr-1" /> Hide</>

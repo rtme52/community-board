@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { Button } from './ui'
-import { ADMIN_EMAILS } from '@/app/admin/admin-config'
 import { Inbox } from 'lucide-react'
 
 export default async function Header() {
@@ -13,9 +12,17 @@ export default async function Header() {
     let hasUserTickets = false
     let userTicketCount = 0
 
-    if (user && user.email) {
-        if (ADMIN_EMAILS.includes(user.email)) {
-            isAdmin = true
+    if (user) {
+        // Check Admin Status from DB
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
+
+        isAdmin = !!profile?.is_admin
+
+        if (isAdmin) {
             const { count } = await supabase
                 .from('support_tickets')
                 .select('*', { count: 'exact', head: true })
@@ -52,13 +59,16 @@ export default async function Header() {
                         <div className="flex items-center gap-4">
                             {isAdmin ? (
                                 <Link href="/admin">
-                                    <Button variant="ghost" size="sm" className="relative text-stone-400 hover:text-stone-100 mr-2">
-                                        <Inbox size={18} />
-                                        {openTicketsCount > 0 && (
-                                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                                                {openTicketsCount}
-                                            </span>
-                                        )}
+                                    <Button variant="ghost" size="sm" className="relative text-stone-400 hover:text-stone-100 mr-2 flex items-center gap-2">
+                                        <div className="relative">
+                                            <Inbox size={18} />
+                                            {openTicketsCount > 0 && (
+                                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                                                    {openTicketsCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-xs font-semibold uppercase tracking-wider">Admin Panel</span>
                                     </Button>
                                 </Link>
                             ) : (
@@ -68,20 +78,28 @@ export default async function Header() {
                                    Let's stick to showing ONLY if they have tickets for now to avoid clutter, 
                                    as per my previous attempt, but actually writing the file this time.
                                 */
-                                hasUserTickets && (
-                                    <Link href="/my-tickets">
-                                        <Button variant="ghost" size="sm" className="relative text-stone-400 hover:text-stone-100 mr-2">
-                                            <Inbox size={18} />
-                                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-stone-700 text-[10px] font-bold text-white">
-                                                {userTicketCount}
-                                            </span>
-                                        </Button>
-                                    </Link>
-                                )
+                                <>
+                                    {hasUserTickets && (
+                                        <Link href="/my-tickets">
+                                            <Button variant="ghost" size="sm" className="relative text-stone-400 hover:text-stone-100 mr-2">
+                                                <Inbox size={18} />
+                                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-stone-700 text-[10px] font-bold text-white">
+                                                    {userTicketCount}
+                                                </span>
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </>
                             )}
                             <span className="hidden text-sm text-stone-400 sm:inline-block">
                                 {user.email}
                             </span>
+                            <Link href="/my-listings">
+                                <Button variant="ghost" size="sm" className="text-stone-400 hover:text-stone-100">
+                                    My Listings
+                                </Button>
+                            </Link>
+
                             <form action="/auth/signout" method="post">
                                 <Button variant="ghost">
                                     Sign Out

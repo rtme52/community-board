@@ -70,3 +70,49 @@ export async function signup(formData: FormData) {
         return { success: true }
     }
 }
+
+
+export async function resetPassword(formData: FormData) {
+    const supabase = await createClient()
+    const email = formData.get('email') as string
+
+    // Determine the redirect URL based on environment
+    const siteUrl = process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : 'https://guemes.services'
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/auth/callback?next=/auth/update-password`,
+    })
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    return { success: true }
+}
+
+export async function updatePassword(formData: FormData) {
+    const supabase = await createClient()
+    const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+
+    if (!password || !confirmPassword) {
+        return { error: 'Password and Confirm Password are required' }
+    }
+
+    if (password !== confirmPassword) {
+        return { error: 'Passwords do not match' }
+    }
+
+    const { error } = await supabase.auth.updateUser({
+        password: password
+    })
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    revalidatePath('/', 'layout')
+    redirect('/')
+}

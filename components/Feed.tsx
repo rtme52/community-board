@@ -15,6 +15,7 @@ export default async function Feed() {
         .from('listings')
         .select('*, profiles(full_name)')
         .eq('is_hidden', false)
+        .eq('is_admin_hidden', false)
         .order('created_at', { ascending: false })
 
     // Group by category
@@ -95,7 +96,7 @@ export default async function Feed() {
                                     </h3>
                                     {getCategoryBadge(category)}
                                 </div>
-                                <span className="text-sm font-medium text-stone-500 bg-stone-900 px-2 py-1 rounded-full border border-stone-800">
+                                <span className="text-sm font-medium text-stone-400 bg-stone-900 px-2 py-1 rounded-full border border-stone-800">
                                     {items.length} Posts
                                 </span>
                             </div>

@@ -33,6 +33,25 @@ export async function updateListing(listingId: number, formData: FormData) {
         return { error: 'Unauthorized' }
     }
 
+    // Check Ban Status
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_banned, banned_until')
+        .eq('id', user.id)
+        .single()
+
+    if (profile?.is_banned) {
+        if (profile.banned_until) {
+            const until = new Date(profile.banned_until)
+            if (until > new Date()) {
+                return { error: `Your account is suspended until ${until.toLocaleDateString()} ${until.toLocaleTimeString()}` }
+            }
+            // If expired, fall through
+        } else {
+            return { error: 'Your account has been permanently suspended.' }
+        }
+    }
+
     const title = formData.get('title') as string
     const category = formData.get('category') as string
     const content = formData.get('content') as string
@@ -84,3 +103,28 @@ export async function updateListing(listingId: number, formData: FormData) {
     revalidatePath('/')
     redirect('/')
 }
+
+export async function toggleListingVisibility(listingId: number, isHidden: boolean) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    const { error } = await supabase
+        .from('listings')
+        .update({ is_hidden: isHidden })
+        .eq('id', listingId)
+        .eq('user_id', user.id) // Ensure ownership
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    revalidatePath('/')
+    revalidatePath('/')
+    revalidatePath('/my-listings')
+}
+
+
